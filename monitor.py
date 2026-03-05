@@ -11,32 +11,66 @@ def check_strait():
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     response = client.messages.create(
         model="claude-sonnet-4-20250514",
-        max_tokens=1000,
+        max_tokens=500,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
-        messages=[{"role": "user", "content": 
+        messages=[{"role": "user", "content":
             f"Найди актуальные новости об Ормузском проливе на {date.today()}. "
-            "Пролив ОТКРЫТ или ПЕРЕКРЫТ? Дай краткий анализ на русском (3-4 предложения)."
+            "Ответь СТРОГО в таком формате (ничего лишнего):\n"
+            "СТАТУС: ОТКРЫТ или ПЕРЕКРЫТ\n"
+            "УГРОЗА: LOW или MEDIUM или HIGH\n"
+            "ПРИЧИНА: одно предложение максимум\n"
+            "Отвечай на русском."
         }]
     )
     return "".join(b.text for b in response.content if b.type == "text")
 
-def send_telegram(text):
-    requests.post(f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage", json={
-        "chat_id": TG_CHAT_ID,
-        "text": f"🌊 *Ормузский пролив — {date.today()}*\n\n{text}",
-        "parse_mode": "Markdown"
-    })
+def parse_and_send(text):
+    # Определяем статус
+    upper = text.upper()
+    if "ПЕРЕКРЫТ" in upper or "ЗАКРЫТ" in upper or "BLOCKED" in upper:
+        status_emoji = "🔴"
+        status_text  = "ПЕРЕКРЫТ"
+    elif "ОТКРЫТ" in upper or "OPEN" in upper:
+        status_emoji = "🟢"
+        status_text  = "ОТКРЫТ"
+    else:
+        status_emoji = "🟡"
+        status_text  = "НЕИЗВЕСТНО"
 
-send_telegram(check_strait())
+    # Определяем уровень угрозы
+    if "HIGH" in upper:
+        threat = "🔥 HIGH"
+    elif "MEDIUM" in upper:
+        threat = "⚠️ MEDIUM"
+    else:
+        threat = "✅ LOW"
 
-def send_telegram(text):
-    emoji = "🟢" if "открыт" in text.lower() else "🔴" if "перекрыт" in text.lower() else "🟡"
+    # Извлекаем причину
+    cause = ""
+    for line in text.splitlines():
+        if "ПРИЧИНА" in line.upper():
+            cause = line.split(":", 1)[-1].strip()
+            break
+
+    message = (
+        f"🌊 *Ормузский пролив — {date.today().strftime('%d.%m.%Y')}*\n\n"
+        f"Угроза: {threat}\n"
+    )
+    if cause:
+        message += f"_{cause}_"
+
     response = requests.post(
         f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
         json={
             "chat_id": TG_CHAT_ID,
-            "text": f"{emoji} *Ормузский пролив — {date.today()}*\n\n{text}",
+            "text": message,
             "parse_mode": "Markdown"
         }
     )
-    print("Telegram ответ:", response.status_code, response.text)
+    print("Telegram:", response.status_code, response.text)
+
+if __name__ == "__main__":
+    print("Проверяю состояние пролива...")
+    result = check_strait()
+    print("AI ответ:", result)
+    parse_and_send(result)
