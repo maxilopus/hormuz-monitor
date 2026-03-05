@@ -1,3 +1,4 @@
+import os
 import anthropic
 import requests
 from datetime import date
