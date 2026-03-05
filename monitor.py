@@ -28,3 +28,15 @@ def send_telegram(text):
     })
 
 send_telegram(check_strait())
+
+def send_telegram(text):
+    emoji = "🟢" if "открыт" in text.lower() else "🔴" if "перекрыт" in text.lower() else "🟡"
+    response = requests.post(
+        f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage",
+        json={
+            "chat_id": TG_CHAT_ID,
+            "text": f"{emoji} *Ормузский пролив — {date.today()}*\n\n{text}",
+            "parse_mode": "Markdown"
+        }
+    )
+    print("Telegram ответ:", response.status_code, response.text)
