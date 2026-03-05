@@ -54,7 +54,7 @@ def parse_and_send(text):
 
     message = (
         f"🌊 *Ормузский пролив — {date.today().strftime('%d.%m.%Y')}*\n\n"
-        f"Угроза: {threat}\n"
+        f"{status_emoji} *{status_text}*\n"
     )
     if cause:
         message += f"_{cause}_"
