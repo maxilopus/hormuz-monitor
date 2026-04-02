@@ -2,7 +2,7 @@ name: Hormuz Daily Check
 
 on:
   schedule:
-    - cron: '0 7 * * *'  # каждый день в 10:00 МСК (07:00 UTC)
+    - cron: '0 5 * * *'  # каждый день в 8:00 МСК (05:00 UTC)
   workflow_dispatch:       # кнопка ручного запуска
 
 jobs:
