@@ -10,7 +10,7 @@ TG_CHAT_ID    = os.environ["TG_CHAT_ID"]
 def check_strait():
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     response = client.messages.create(
-        model="claude-sonnet-4-6",
+        model="claude-haiku-4-5-20251001",
         max_tokens=500,
         tools=[{"type": "web_search_20250305", "name": "web_search"}],
         messages=[{"role": "user", "content":
